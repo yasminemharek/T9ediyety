@@ -52,7 +52,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return Scaffold(
         backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.green[100],
+        backgroundColor: const Color(0xFF4CAF50),
         title: const Text("Définir mon budget"),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),

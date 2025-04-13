@@ -1,4 +1,5 @@
 import 'package:appli/screens/home_screen.dart';
+import 'package:appli/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -189,7 +190,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     setState(() {
                       _isRegisterPressed = false;
                     });
-                    Navigator.pushNamed(context, '/register');
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                    );
                   },
                   onTapCancel: () {
                     setState(() {

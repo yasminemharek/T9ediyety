@@ -1,4 +1,4 @@
-import 'package:appli/screens/add_product_screen.dart';
+import 'package:appli/screens/product_screen.dart';
 import 'package:appli/screens/budget_screen.dart';
 import 'package:appli/screens/profil_screen.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +149,7 @@ class HomeScreen extends StatelessWidget {
               break;
             case 2:
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) => const AddProductScreen()),
+                MaterialPageRoute(builder: (context) => const ProductScreen()),
                     (route) => false,
               );
               break;

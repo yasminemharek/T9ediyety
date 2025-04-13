@@ -21,19 +21,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     // Initialisation de l'AnimationController
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 1),
       vsync: this,
     );
 
     // Animation de zoom (commence à 0.5 et va jusqu'à 1.0)
-    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _animation = Tween<double>(begin: 0.3, end: 0.7).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
     // Démarrer l'animation dès que l'écran est construit
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => OnboardingScreen()),

@@ -1,4 +1,4 @@
-// app.dart
+import 'package:appli/screens/List_Detail_Screen.dart';
 import 'package:appli/screens/profil_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:appli/screens/splash_screen.dart';
@@ -7,7 +7,7 @@ import 'package:appli/screens/login_screen.dart';
 import 'package:appli/screens/register_screen.dart';
 import 'package:appli/screens/home_screen.dart';
 import 'package:appli/screens/budget_screen.dart';
-import 'package:appli/screens/add_product_screen.dart';
+import 'package:appli/screens/product_screen.dart';
 import 'package:appli/screens/optimized_list_screen.dart';
 
 class MyApp extends StatelessWidget {
@@ -26,15 +26,30 @@ class MyApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) =>  SplashScreen(),
+        '/': (context) => SplashScreen(),
         '/onboarding': (context) => OnboardingScreen(),
-        '/login': (context) =>  LoginScreen(),
-        '/register': (context) =>  RegisterScreen(),
+        '/login': (context) => LoginScreen(),
+        '/register': (context) => RegisterScreen(),
         '/home': (context) => HomeScreen(),
-        '/budget': (context) =>  BudgetScreen(),
-        '/add_product': (context) => AddProductScreen(),
-        '/optimized_list': (context) =>  OptimizedListScreen(),
-        '/profil':(context) => ProfileScreen(),
+        '/budget': (context) => BudgetScreen(),
+        '/product': (context) => ProductScreen(),
+        '/optimized_list': (context) => OptimizedListScreen(),
+        '/profil': (context) => ProfileScreen(),
+        // Remove ListDetailScreen from routes since it needs parameters
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/product_list') {
+          // Extract the arguments
+          final args = settings.arguments as Map<String, dynamic>?;
+          return MaterialPageRoute(
+            builder: (context) => ListDetailScreen(
+              // Provide default values in case args are missing
+              listId: args?['listId'] ?? '',
+              listName: args?['listName'] ?? 'Liste',
+            ),
+          );
+        }
+        return null;
       },
     );
   }
