@@ -1,5 +1,6 @@
 import 'package:appli/screens/home_screen.dart';
 import 'package:appli/screens/register_screen.dart';
+import 'package:appli/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,11 +13,29 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final AuthService _authService = AuthService();
+
   bool _isPasswordVisible = false;
   bool _isForgotPasswordPressed = false;
   bool _isRegisterPressed = false;
+  bool _isLoading = false;
 
-  void _login() {
+  @override
+  void initState() {
+    super.initState();
+    _checkIfLoggedIn();
+  }
+
+  void _checkIfLoggedIn() async {
+    final isAuthenticated = await _authService.isAuthenticated();
+    if (isAuthenticated) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
+  void _login() async {
     final email = emailController.text.trim();
     final password = passwordController.text;
 
@@ -27,17 +46,70 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // TODO: Implémenter Firebase Auth ici
+    setState(() {
+      _isLoading = true;
+    });
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
+    try {
+      final result = await _authService.login(email, password);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (result['success']) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'] ?? "Erreur de connexion")),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erreur: $e")));
+    }
   }
 
+  void _forgotPassword() async {
+    final email = emailController.text.trim();
 
-  void _loginWithGoogle() {
-    // TODO: Implémenter Google Sign-In avec Firebase
-    print("Connexion avec Google");
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Veuillez entrer votre email")),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final result = await _authService.forgotPassword(email);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? "Demande envoyée")),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erreur: $e")));
+    }
   }
 
   @override
@@ -51,7 +123,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 const SizedBox(height: 40),
                 // Logo ou icône de l'application
                 Container(
@@ -90,8 +161,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.grey[220],
-                    prefixIcon: const Icon(Icons.email, color: Color(0xFF689F38)),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    prefixIcon: const Icon(
+                      Icons.email,
+                      color: Color(0xFF689F38),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 20,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -108,10 +185,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.grey[220],
-                    prefixIcon: const Icon(Icons.lock, color: Color(0xFF689F38)),
+                    prefixIcon: const Icon(
+                      Icons.lock,
+                      color: Color(0xFF689F38),
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                         color: Colors.grey,
                       ),
                       onPressed: () {
@@ -120,7 +202,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         });
                       },
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 16,
+                      horizontal: 20,
+                    ),
                   ),
                 ),
                 Align(
@@ -135,8 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       setState(() {
                         _isForgotPasswordPressed = false;
                       });
-                      // TODO: Implement forgot password
-                      print("Mot de passe oublié");
+                      _forgotPassword();
                     },
                     onTapCancel: () {
                       setState(() {
@@ -150,9 +234,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           color: const Color(0xFF689F38),
                           fontSize: 14,
-                          decoration: _isForgotPasswordPressed
-                              ? TextDecoration.underline
-                              : TextDecoration.none,
+                          decoration:
+                              _isForgotPasswordPressed
+                                  ? TextDecoration.underline
+                                  : TextDecoration.none,
                           decorationThickness: 2,
                         ),
                       ),
@@ -162,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 // Bouton de connexion
                 ElevatedButton(
-                  onPressed: _login,
+                  onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8BC34A),
                     foregroundColor: Colors.white,
@@ -173,10 +258,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    "Se connecter",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+                  child:
+                      _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                            "Se connecter",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                 ),
                 const SizedBox(height: 16),
                 // Lien d'inscription
@@ -191,7 +282,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       _isRegisterPressed = false;
                     });
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
                     );
                   },
                   onTapCancel: () {
@@ -204,55 +297,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: RichText(
                       text: TextSpan(
                         text: "Pas encore de compte? ",
-                        style: const TextStyle(color: Colors.black54, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                        ),
                         children: [
                           TextSpan(
                             text: "Inscrivez-vous",
                             style: TextStyle(
                               color: const Color(0xFF689F38),
                               fontWeight: FontWeight.bold,
-                              decoration: _isRegisterPressed
-                                  ? TextDecoration.underline
-                                  : TextDecoration.none,
+                              decoration:
+                                  _isRegisterPressed
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
                               decorationThickness: 2,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Séparateur "Ou"
-                const Row(
-                  children: [
-                    Expanded(child: Divider(color: Colors.grey)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Text("Ou", style: TextStyle(color: Colors.grey)),
-                    ),
-                    Expanded(child: Divider(color: Colors.grey)),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Bouton Google
-                OutlinedButton.icon(
-                  onPressed: _loginWithGoogle,
-                  icon: const Icon(Icons.login),
-                  label: const Text(
-                    "Continuer avec Google",
-                    style: TextStyle(color: Colors.black87, fontSize: 16),
-                  ),
-                  style:OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.grey[700],
-                    elevation: 2,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    side: BorderSide(color: Colors.grey[300]!, width: 1.5),
                   ),
                 ),
                 const SizedBox(height: 30),

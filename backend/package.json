@@ -4,9 +4,15 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
-  "keywords": [],
+  "keywords": [
+    "authentication",
+    "nodejs",
+    "mysql",
+    "flutter"
+  ],
   "author": "",
   "license": "ISC",
   "description": "",
@@ -16,6 +22,7 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.6.0",
     "pg": "^8.14.1",
     "socket.io": "^4.8.1"
   }

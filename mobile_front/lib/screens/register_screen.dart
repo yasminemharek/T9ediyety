@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'package:appli/screens/home_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -9,26 +12,60 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
 
   bool _isRegisterPressed = false; // ✅ variable ajoutée
 
-  void _register() {
-    setState(() {
-      _isRegisterPressed = true;
-    });
+  void _register() async {
+    final username = usernameController.text.trim();
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text.trim();
 
-    if (passwordController.text != confirmPasswordController.text) {
+    if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Les mots de passe ne correspondent pas")),
       );
       return;
     }
 
-    // TODO: Implémenter l'inscription avec Firebase
-    Navigator.pushReplacementNamed(context, '/home');
+    final url = Uri.parse(
+      'http://10.0.2.2:3000/api/auth/register',
+    ); // ⚠️ Adresse IP pour l'émulateur Android
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "username": username,
+          "email": email,
+          "password": password,
+        }),
+      );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Inscription réussie !")));
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      } else {
+        final responseBody = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erreur : ${responseBody['message']}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Erreur de connexion : $e")));
+    }
   }
 
   @override
@@ -47,6 +84,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF4CAF50),
+                ),
+              ),
+              const SizedBox(height: 30),
+              TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nom d\'utilisateur',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.person),
                 ),
               ),
               const SizedBox(height: 30),
@@ -92,7 +138,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: TextButton(
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
                     );
                   },
                   child: Padding(
@@ -100,16 +148,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: RichText(
                       text: TextSpan(
                         text: "Vous avez déjà un compte ? ",
-                        style: const TextStyle(color: Colors.black54, fontSize: 14),
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                        ),
                         children: [
                           TextSpan(
                             text: "Connectez-vous",
                             style: TextStyle(
                               color: const Color(0xFF689F38),
                               fontWeight: FontWeight.bold,
-                              decoration: _isRegisterPressed
-                                  ? TextDecoration.underline
-                                  : TextDecoration.none,
+                              decoration:
+                                  _isRegisterPressed
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
                               decorationThickness: 2,
                             ),
                           ),
@@ -126,4 +178,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
